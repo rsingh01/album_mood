@@ -45,28 +45,30 @@ def print_album_sentiments(album_sentiments: dict):
         pprint.pprint(sentiments)
         print()
 
-def get_sentiments(album_dict: dict) -> dict:
+def get_sentiment_by_album(artist: Artist) -> dict:
     analyzer = SentimentIntensityAnalyzer()
     album_sentiments = {}
-    for album, lyrics in album_dict.items():
+    for album in artist.albums:
         sentiments = {'compound': 0.0, 'neg': 0.0, 'neu': 0.0, 'pos': 0.0}
-        for sentence in lyrics:
-            vs = analyzer.polarity_scores(sentence)
-            sentiments['compound'] += vs['compound']
-            sentiments['neg'] += vs['neg']
-            sentiments['neu'] += vs['neu']
-            sentiments['pos'] += vs['pos']
+        for song in album.song_list:
+            for sentence in song.lyrics:
+                vs = analyzer.polarity_scores(sentence)
+                sentiments['compound'] += vs['compound']
+                sentiments['neg'] += vs['neg']
+                sentiments['neu'] += vs['neu']
+                sentiments['pos'] += vs['pos']
 
-        sentiments['compound'] /= len(lyrics)
-        sentiments['neg'] /= len(lyrics)
-        sentiments['neu'] /= len(lyrics)
-        sentiments['pos'] /= len(lyrics)
-        album_sentiments[album] = sentiments
+            sentiments['compound'] /= len(song.lyrics)
+            sentiments['neg'] /= len(song.lyrics)
+            sentiments['neu'] /= len(song.lyrics)
+            sentiments['pos'] /= len(song.lyrics)
 
+        album_sentiments[album.album_title] = sentiments
+    
     return album_sentiments
 
 
-def main():
+def populate_artist():
 
     #vertical album card for getting album urls
     #u-display_block for getting song urls per album
@@ -139,9 +141,16 @@ def main():
 
     #album_sentiments = get_sentiments(album_dict)
     #print_album_sentiments(album_sentiments)
-    pprint.pprint(artist.__dict__)
-    for album in artist.albums:
-        pprint.pprint(album.__dict__)
-        
+    #pprint.pprint(artist.__dict__)
+    #for album in artist.albums:
+    #    pprint.pprint(album.__dict__)
+    return artist
+
+def main():
+    artist = populate_artist()
+    album_sentiments = get_sentiment_by_album(artist)
+    print('printing sentiments by album')
+    pprint.pprint(album_sentiments)
+
 if __name__ == "__main__":
     main()
