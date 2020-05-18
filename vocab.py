@@ -10,7 +10,6 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 nltk.download('punkt')
 
 class Artist: 
-
     def __init__(self, artist_name: str, albums: list):
         self.artist_name = artist_name
         self.albums = albums
