@@ -5,6 +5,10 @@ import string
 import httplib2
 import nltk
 import pprint
+import sys
+import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from psycopg2 import sql
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 nltk.download('punkt')
@@ -29,7 +33,31 @@ class Song:
         self.song_title = song_title
         self.lyrics = lyrics
 
+def init_db():
+    con = None
+    #see if you can connect to the db directly, otherwise initialize it from scratch
+    try:
+        con = psycopg2.connect(dbname='music_db')
+        print('connected to music db successfully')
+        return con
+    
+    except psycopg2.DatabaseError as e:
+        print('Error connecting to db: {}'.format(e))
+        print('Creating db now...')
+        con = psycopg2.connect(dbname='postgres')
+        cur = con.cursor()
+        con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT) #because stackoverflow told me to
+        cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier('music_db')))
+        con.close()
+        con = psycopg2.connect(dbname = 'music_db')
+        return con
 
+
+def access_control_db():
+    #this function will create two users; an admin for us to populate the db, and another
+    #user which can only query stuff (this will be what the front end users authenticate as)
+    #will have to map objects to tables 
+    pass
 
 def get_album_html() -> bs4.BeautifulSoup:
     http = httplib2.Http()
@@ -146,10 +174,12 @@ def populate_artist():
     return artist
 
 def main():
-    artist = populate_artist()
-    album_sentiments = get_sentiment_by_album(artist)
-    print('printing sentiments by album')
-    pprint.pprint(album_sentiments)
+    # artist = populate_artist()
+    # album_sentiments = get_sentiment_by_album(artist)
+    # print('printing sentiments by album')
+    # pprint.pprint(album_sentiments)
+    con = init_db()
+    print(con)
 
 if __name__ == "__main__":
     main()
