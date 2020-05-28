@@ -36,6 +36,7 @@ class Song:
 def init_db():
     con = None
     #see if you can connect to the db directly, otherwise initialize it from scratch
+    #cur is cursor -- used to execute SQL commands
     try:
         con = psycopg2.connect(dbname='music_db')
         print('connected to music db successfully')
@@ -53,11 +54,20 @@ def init_db():
         return con
 
 
-def access_control_db():
+#have to get rid of hard coded credentials somehow
+def access_control_db(con: psycopg2.connect) -> psycopg2.connect:
     #this function will create two users; an admin for us to populate the db, and another
     #user which can only query stuff (this will be what the front end users authenticate as)
-    #will have to map objects to tables 
-    pass
+    con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    cur = con.cursor()
+    try:
+        query = sql.SQL("select COUNT(*) from {table} where {pkey} = %s").format(
+            table=sql.Identifier('pg_roles'),
+            pkey=sql.Identifier('rolname'))
+        cur.execute(query, ('music_man',))
+    except psycopg2.DatabaseError as e:
+        print('Error in DB access control: {}'.format(e))
+        #cur.execute("CREATE ROLE {} WITH LOGIN CREATEDB PASSWORD '{}'".format('music_man', 'music_man_rocks')))
 
 def get_album_html() -> bs4.BeautifulSoup:
     http = httplib2.Http()
@@ -180,6 +190,7 @@ def main():
     # pprint.pprint(album_sentiments)
     con = init_db()
     print(con)
+    access_control_db(con)
 
 if __name__ == "__main__":
     main()
