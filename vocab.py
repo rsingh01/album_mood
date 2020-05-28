@@ -65,6 +65,7 @@ def access_control_db(con: psycopg2.connect) -> psycopg2.connect:
             table=sql.Identifier('pg_roles'),
             pkey=sql.Identifier('rolname'))
         cur.execute(query, ('music_man',))
+        print(cur.fetchone()[0])
     except psycopg2.DatabaseError as e:
         print('Error in DB access control: {}'.format(e))
         #cur.execute("CREATE ROLE {} WITH LOGIN CREATEDB PASSWORD '{}'".format('music_man', 'music_man_rocks')))
